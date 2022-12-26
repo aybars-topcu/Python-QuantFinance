@@ -1,0 +1,67 @@
+import yfinance as yf
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+import statsmodels.api as sm
+import statsmodels.tsa.stattools as ts
+
+# WE analyze pairs which were filtered through our cadfPairTrade code
+# example pair: VISA and MasterCard
+
+stock1 = "V"   #VISA
+stock2 = 'MA'  #MASTERCARD
+
+S1 = yf.download(stock1, '2020-1-1')
+S1 = S1['Close']
+
+S2 = yf.download(stock2, '2020-1-1')
+S2 = S2['Close']
+
+fig = plt.figure()
+fig, g = plt.subplots(nrows=1,ncols=2, figsize=(16,5))
+g[0].plot(S1)
+g[0].set_title(stock1)
+g[1].plot(S2)
+g[1].set_title(stock2)
+plt.tight_layout()
+
+fig2 = plt.figure(figsize=(10,5))
+graph1 = fig2.add_axes([0,0,1,1])
+ratio = (S1[0]) / (S2[0])
+print(S1[0]) 
+print(S2[0]) 
+print(ratio)
+graph1.plot(S1, label=stock1)
+graph1.plot(S2*ratio, label=stock2)
+graph1.legend()
+fig3 = plt.figure(figsize=(10,5))
+
+model = sm.OLS(S1.iloc[100:], S2.iloc[100:]).fit()  #---- 1st 100 days omitted - obsolete data ----
+portfolio = S1 - model.params[0] * S2  #-----------  ADFULLER Cointegration ----------- 
+
+cadf = ts.adfuller(portfolio)  #-----------  CADF Value  -----------
+spread = S1 - model.params[0] * S2
+spreadLast = S1.iloc[-1]- model.params[0] * S2.iloc[-1]
+moving_average = spread.rolling(60).mean()
+moving_std_dev = spread.rolling(60).std()
+
+# upper and lower band
+upper_band = moving_average + 2 * moving_std_dev
+lower_band = moving_average - 2 * moving_std_dev
+                                     
+print("\n\n", stock1, " - ", stock2)
+print("Hedge ratio: ", model.params[0])
+print("CADF value: ",cadf[0],"\n")
+print("CADF critical value: ",cadf[4],"\n")
+
+fig3 = plt.figure(figsize=(10,5)) # new canvas for new graph
+plt.title("{}--{}".format(stock1, stock2))
+spread.plot(figsize=(12,7))
+plt.axhline((spread).mean(), color='black', linestyle='--')
+plt.axhline((spread).std(), color='orange', linestyle='--')
+plt.axhline((spread).std()*2, color='red', linestyle='--')
+plt.axhline((spread).std()*-1, color='orange', linestyle='--')
+plt.axhline((spread).std()*-2, color='red', linestyle='--')
+moving_average.plot()
+upper_band.plot()
+lower_band.plot()
+plt.show()
