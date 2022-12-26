@@ -1,0 +1,84 @@
+import statsmodels.api as sm
+import statsmodels.tsa.stattools as ts
+import matplotlib.pyplot as plt
+import yfinance as yf
+from datetime import date
+
+# divide workload to 5 days and use a dictionary to schedule each days' security list
+
+sec_list_1 = [['PAA'],   ['H'],  ['LSI'], ['CPT'], ['MCO'], ['ATO'], ['DRH'], ['MET'], ['DRH'], ['BP'], ['ARCC'], ['DRH'], ['ETN'], ['PK'], ['DTE'],  ['CUZ'], ['ALK'], ['DOV'], ['PEB'], ['HIW'], ['BDN'],['CUBE'], ['CNO'], ['BDN'], ['HOPE'], ['EQIX'], ['LDOS'], ['CUBE'], ['AGI'], ['SNDR'],  ['V'], ['GLPI'], ['NSA'],  ['EW'], ['RSG'], ['SBRA'], ['CPB'], ['CPT'], ['CPB'], ['AY'], ['JBGS'], ['DRE'],  ['BK'], ['FBHS'], ['FR'],  ['FLO'], ['PEB'], ['ALLY'], ['ABC'], ['AAP'], ['EXR'], ['GIS']] 
+sec_list_2 = [['PAGP'], ['MAR'], ['NSA'], ['MAA'], ['SPGI'], ['NI'], ['PEB'], ['MFC'], ['PK'], ['TTE'], ['GBDC'], ['RHP'], ['MWA'], ['RHP'], ['FTS'], ['HIW'], ['JBLU'], ['ETN'], ['PK'], ['PDM'], ['DEI'], ['NSA'], ['MFC'], ['CUZ'], ['ISBC'], ['SBAC'], ['SAIC'],  ['LSI'], ['FNV'], ['WERN'], ['WU'], ['LAMR'],['STAG'], ['GMED'], ['WM'], ['VTR'],  ['K'],  ['ELS'],  ['GIS'], ['NEP'], ['WRE'], ['STAG'], ['STT'], ['WHR'], ['NSA'], ['GIS'], ['RHP'],  ['COF'], ['MCK'], ['GPC'], ['NSA'], ['SJM']]
+sec_list_3 = [['AVB'], ['HLT'], ['KBH'], ['STOR'], ['CUZ'], ['APO'], ['CG'], ['NWBI'], ['K'], ['AME'], ['FNB'], ['ECL'], ['APAM'], ['LSI'], ['AEE'], ['BAC'], ['AMGN'], ['BXP'], ['ESS'], ['ALLY'], ['PFG'], ['AMT'], ['SLB'], ['ARE'], ['PK'], ['ALV'], ['BSX'], ['AGI'], ['FR'], ['COF'], ['CBRL'], ['LNC'], ['CRM'], ['HLT'], ['EQH'], ['AVB'], ['HST'], ['SLG'], ['CPT'], ['AB'], ['KMT'], ['AME'], ['DAN'], ['FULT'], ['ADM'], ['ITW'], ['FFBC'], ['KNX'], ['NUVA'], ['GSK'], ['AGNC'], ['HON']]
+sec_list_4 = [['EQR'], ['WH'], ['MDC'], ['VICI'], ['PDM'], ['CG'], ['KKR'], ['WAFD'], ['POST'], ['MWA'], ['ISBC'], ['SHW'], ['BLK'], ['STAG'], ['POR'], ['TD'], ['BMY'], ['HIW'],  ['UDR'], ['OMF'], ['SLF'], ['EQIX'], ['WHD'], ['DEA'],  ['RLJ'], ['LEA'], ['IART'], ['NG'], ['STAG'], ['OMF'], ['TXRH'], ['PUK'], ['WDAY'], ['MAR'], ['SLF'], ['UDR'],  ['PK'],  ['VNO'], ['IRT'], ['CG'],  ['TKR'], ['IEX'],  ['MGA'],  ['WAFD'], ['BG'],  ['PH'],   ['ONB'], ['ODFL'], ['ZBH'], ['SNY'], ['NLY'], ['MMM']]
+sec_list_5 = [['IQV'], ['CCI'], ['MDT'], ['EXC'], ['HDB'], ['PCH'], ['CM'], ['AGCO'], ['MTB'], ['BPOP'], ['THO'], ['ASB'], ['BXP'],  ['IQV'],  ['HPP'], ['CNC'], ['BDN'], ['ENB'], ['RLJ'],  ['H'],  ['SYY'], ['CHD'],  ['AVNT'], ['AFL'], ['MCHP'], ['BDN'], ['PCH'], ['KMI'], ['KNX'], ['MCD'], ['APAM'],  ['K'],  ['ORAN'],  ['CB'], ['DRI'], ['GLPI'], ['NJR'], ['DAL'], ['PEB'], ['BMO'], ['CSCO'], ['CPB'], ['NTRS'], ['GGG'],  ['LNC'], ['LITE'], ['MHK'], ['OTEX'], ['AME'], ['CSX'], ['ADP']]
+sec_list_6 = [['SYNH'], ['SBAC'], ['NUVA'], ['NGG'], ['IBN'], ['WY'], ['RY'], ['DE'], ['SSB'], ['FBP'], ['WGO'], ['ONB'], ['SLG'], ['LH'],    ['PGRE'], ['UNH'], ['WRE'], ['TRP'], ['SVC'], ['HLT'], ['USFD'], ['CL'], ['ESI'],  ['MFC'],  ['ONTO'], ['BXP'], ['RYN'], ['TRP'], ['WERN'], ['WEN'], ['FHI'], ['SJM'], ['VOD'],  ['TRV'], ['TXRH'], ['OUT'], ['SWX'], ['JBLU'], ['XHR'], ['RY'], ['VIAV'], ['SJM'], ['SEIC'], ['ROP'], ['MFC'], ['VIAV'], ['TPX'], ['PRGS'], ['HON'], ['UNP'], ['PAYX']]   
+sec_list_7 = [['NCLH'], ['FR'], ['MDT'], ['GMED'], ['TRU'], ['LNT'], ['OKE'], ['GNTX'], ['FULT'], ['LAMR'], ['UNP'], ['AVGO'], ['ET'], ['FISV'], ['CL'], ['BSX'], ['MDT'], ['BWA'], ['DEI'], ['CSX'], ['AGI'], ['BKH'], ['ETR'], ['FAF'], ['REXR'], ['ACGL'], ['APAM'], ['DTE'], ['DEO'], ['BWA'], ['DRE'], ['FBHS'], ['ALLY'], ['BC'], ['DUK'], ['CTSH'], ['CCL'], ['HOMB'], ['MTH'], ['PMT'], ['CMS'], ['AMT'], ['DCP'], ['DAN'], ['WEC'], ['RJF'], ['AMGN'], ['ENB'], ['ATO'], ['RSG'], ['MCHP'], ['HST'], ['QSR'], ['BDN'], ['DECK']]
+sec_list_8 = [['RCL'], ['TRNO'], ['SYK'], ['IART'], ['VRSK'], ['WEC'], ['PBA'], ['LEA'], ['ONB'], ['OUT'], ['WAB'], ['MRVL'], ['MPLX'], ['G'], ['UL'], ['SYK'], ['ZBH'], ['LEA'], ['JBGS'], ['WAB'], ['OR'], ['PEG'], ['NGG'], ['FNF'], ['TRNO'], ['ORI'], ['JHG'], ['PNW'], ['STZ'], ['DAN'], ['LSI'], ['MHK'], ['DFS'], ['HAS'], ['XEL'], ['INFY'], ['RCL'], ['ONB'], ['TPH'], ['TWO'], ['ED'], ['CCI'], ['TRGP'], ['LEA'], ['XEL'], ['SF'], ['NVS'], ['PBA'], ['SR'], ['WCN'], ['NXPI'], ['XHR'], ['YUM'], ['JBGS'], ['NKE']]
+sec_list_9 = [['JNJ'], ['RH'],  ['DRE'], ['AEE'], ['PDM'],  ['ABC'], ['NXPI'], ['BKH'], ['FNV'], ['NTRS'], ['DCI'], ['JBGS'], ['MA'], ['ACM'], ['CBSH'], ['CGNX'], ['GOOGL'], ['CCI'], ['MSFT'], ['CBSH'], ['EXR'], ['IR'], ['PHM'], ['AEE'], ['BMO'], ['QRVO'], ['ON'], ['AMP'], ['JNJ'], ['GSK'], ['KGC'], ['SSRM'], ['CHD'], ['ADSK'], ['DG'], ['BSX'], ['CSX'], ['EVR']]
+sec_list_10= [['PG'],  ['WSM'], ['REXR'],['CMS'], ['WRE'], ['HSIC'], ['ONTO'], ['ETR'], ['WPM'], ['STT'], ['MWA'],  ['KRC'],  ['V'],   ['J'], ['WAFD'], ['KEYS'], ['YELP'],  ['EQIX'], ['SNPS'], ['UCBI'], ['LSI'],['ITT'], ['TPH'], ['XEL'], ['CM'], ['SWKS'], ['ONTO'], ['FSK'], ['NVS'], ['NVS'], ['NG'], ['WPM'], ['PG'], ['SAP'], ['WMT'], ['GMED'], ['NSC'], ['GS']]
+
+# SCHEDULE WEEKLY WORKPLAN:
+# MON: sec_list_1 & 2  -- TUE: sec_list_3 & 4 -- WED: sec_list_5 & 6 -- THU: sec_list_7 & 8 -- FRI: sec_list_9 & 10
+
+sec_dict = {0:{'sec_list_A':sec_list_1,'sec_list_B':sec_list_2}, 1:{'sec_list_A':sec_list_3,'sec_list_B':sec_list_4}, 2:{'sec_list_A':sec_list_5,'sec_list_B':sec_list_6}, 3:{'sec_list_A':sec_list_7,'sec_list_B':sec_list_8},4:{'sec_list_A':sec_list_9,'sec_list_B':sec_list_10}}
+day = date.today().weekday()
+
+sec_list_A = sec_dict[day]['sec_list_A']
+sec_list_B = sec_dict[day]['sec_list_B']
+
+ 
+n = len(sec_list_A)
+
+
+# PAIR EVALUATION FOR COINTEGRATED AUGMENTED DICKEY FULLER TEST, STATIONARITY, SPREAD EVALUATION BEGINS:
+
+for i in range(n):
+    try:
+        
+        S1 = yf.download(sec_list_A[i],"2019-1-1", date.today())
+        S1 = S1['Close']
+        
+        S2 = yf.download(sec_list_B[i],"2019-1-1",date.today())
+        S2 = S2['Close']
+        
+
+        model = sm.OLS(S1.iloc[100:], S2.iloc[100:]).fit()  #---- 1st 100 days omitted - obsolete data ----
+        portfolio = S1 - model.params[0] * S2  #-----------  ADFULLER Cointegration ----------- 
+        
+        cadf = ts.adfuller(portfolio)  #-----------  CADF Value  -----------
+        spread = S1 - model.params[0] * S2
+        spreadLast = S1.iloc[-1]- model.params[0] * S2.iloc[-1]
+        moving_average = spread.rolling(60).mean()
+        moving_std_dev = spread.rolling(60).std()
+        
+        # spread's 2 standart deviations upper and lower band
+        
+        upper_band = moving_average + 2 * moving_std_dev
+        lower_band = moving_average - 2 * moving_std_dev
+        
+        
+        # FILTER CADF SO THAT WE ONLY SEE GOOD CANDIDATES
+        
+        if ( cadf[0]<-2.2  and ( spreadLast < spread.std() * -1 or spreadLast > spread.std() ) ) :    
+                                              
+            print("\n\n", sec_list_A[i], " - ", sec_list_B[i])
+            print("Hedge ratio: ", model.params[0])
+            print("CADF value: ",cadf[0],"\n")
+            print("CADF critical value: ",cadf[4],"\n")
+            
+            plt.title("{}--{}".format(sec_list_A[i],sec_list_B[i]))
+            spread.plot(figsize=(12,7))
+            plt.axhline((spread).mean(), color='black', linestyle='--')
+            plt.axhline((spread).std(), color='orange', linestyle='--')
+            plt.axhline((spread).std()*2, color='red', linestyle='--')
+            plt.axhline((spread).std()*-1, color='orange', linestyle='--')
+            plt.axhline((spread).std()*-2, color='red', linestyle='--')
+            moving_average.plot()
+            upper_band.plot()
+            lower_band.plot()
+            plt.show()
+        
+    except:
+        pass  # IF YAHOOFINANCE FAILS TO RETURN VALUE FOR THIS STOCK THEN SKIP THIS PAIR AND CONTINUE WITH THE PAIR LIST
+        
+  
